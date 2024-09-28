@@ -14,7 +14,6 @@ app.use(express.json());
 // Endpoint to run user C++ code
 app.post("/run-code", (req, res) => {
   const { code } = req.body; // Get the C++ code from the request
-  console.log(code);
 
   // Save the user's code to a file
   const userCodeFilePath = path.join(__dirname, "user_code.cpp");

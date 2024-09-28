@@ -20,7 +20,7 @@ const CodeEditor = () => {
 
     const runCode = async () => {
         try {
-            const response = await fetch('http://localhost:3000/run-code', {
+            const response = await fetch('http://localhost:3000/run-code/cpp', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

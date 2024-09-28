@@ -1,12 +1,20 @@
 const http = require("http");
 const express = require("express");
+const cors = require("cors");
 const { Server: SocketServer } = require("socket.io");
+const runCodeRoute = require("./routes/run_code_route");
+
+const PORT = process.env.PORT || 3000;
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Create the HTTP server
 const server = http.createServer(app);
+
+app.use("/run-code", runCodeRoute);
 
 // Create the Socket.IO server
 const io = new SocketServer(server, {
