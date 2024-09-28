@@ -1,11 +1,13 @@
 const express = require("express");
 const { exec } = require("child_process");
+const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 
 const app = express();
 const port = 3000;
 
+app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -29,7 +31,7 @@ app.post("/run-code", (req, res) => {
         console.error(`Error: ${error.message}`);
         return res.status(500).send(`Error: ${stderr}`);
       }
-      res.send(stdout); // Send the output back to the user
+      res.json({ output: stdout }); // Send the output back to the user
     }
   );
 });
