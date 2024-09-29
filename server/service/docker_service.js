@@ -17,11 +17,22 @@ async function runCppCode(req, res) {
   exec(
     `docker run --rm -v "${resolvedPath}:/usr/src/app" cpp-compiler`,
     (error, stdout, stderr) => {
+      // Delete the user's code file after execution
+      try {
+        const outputBinaryPath = path.join(__dirname, "output");
+        if (fs.existsSync(outputBinaryPath)) {
+          fs.unlinkSync(outputBinaryPath);
+        }
+        fs.unlinkSync(userCodeFilePath);
+      } catch (unlinkError) {
+        console.error(`Could not delete file: ${unlinkError.message}`);
+      }
+
       if (error) {
         console.error(`Error: ${error.message}`);
-        return res.status(400).send(`Error: ${stderr}`);
+        return res.status(400).json({ error: stderr });
       }
-      res.json({ result: stdout }); // Send the output back to the user
+      res.json({ output: stdout }); // Send the output back to the user
     }
   );
 }
@@ -41,11 +52,16 @@ async function runPythonCode(req, res) {
   exec(
     `docker run --rm -v "${resolvedPath}:/usr/src/app" python-compiler`,
     (error, stdout, stderr) => {
+      try {
+        fs.unlinkSync(userCodeFilePath);
+      } catch (unlinkError) {
+        console.error(`Could not delete file: ${unlinkError.message}`);
+      }
       if (error) {
         console.error(`Error: ${error.message}`);
-        return res.status(400).send(`Error: ${stderr}`);
+        return res.status(400).json({ error: stderr });
       }
-      res.json({ result: stdout }); // Send the output back to the user
+      res.json({ output: stdout }); // Send the output back to the user
     }
   );
 }

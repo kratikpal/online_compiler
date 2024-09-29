@@ -1,4 +1,3 @@
-// src/components/CodeEditor.jsx
 import React, { useState } from 'react';
 import { Editor as MonacoEditor } from '@monaco-editor/react';
 
@@ -6,6 +5,8 @@ const CodeEditor = () => {
     const [code, setCode] = useState('// Write your C++ code here...');
     const [output, setOutput] = useState('');
     const [language, setLanguage] = useState('cpp');
+    const [isRunning, setIsRunning] = useState(false); // New state for running status
+
     const handleEditorChange = (value) => {
         setCode(value);
     };
@@ -20,8 +21,9 @@ const CodeEditor = () => {
     };
 
     const runCode = async () => {
+        setIsRunning(true); // Set running state to true
         try {
-            const response = await fetch('http://localhost:3000/run-code/cpp', {
+            const response = await fetch(`http://localhost:3000/run-code/${language}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,28 +31,34 @@ const CodeEditor = () => {
                 body: JSON.stringify({ code }),
             });
 
-            if (!response.ok) {
+            if (response.status === 200) {
+                const result = await response.json();
+                setOutput(result.output);
+            } else if (response.status === 400) {
+                const result = await response.json();
+                setOutput(result.error);
+            } else {
                 throw new Error('Network response was not ok');
             }
-
-            const result = await response.json();
-            setOutput(result.output);
         } catch (error) {
             setOutput(`Error: ${error.message}`);
+        } finally {
+            setIsRunning(false); // Reset running state
         }
     };
 
     const handleLanguageChange = (event) => {
-        setLanguage(event.target.value);
-        setCode(`// Write your ${event.target.value} code here...`);
+        const selectedLanguage = event.target.value;
+        setLanguage(selectedLanguage);
+
+        const commentSymbol = selectedLanguage === 'python' ? '#' : '//';
+        setCode(`${commentSymbol} Write your ${selectedLanguage} code here...`);
     };
 
     return (
         <div className="container-fluid" style={{ height: '100vh', display: 'flex', flexDirection: 'row' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', paddingRight: '10px' }}>
                 <div className="d-flex align-items-center mb-2" style={{ justifyContent: 'flex-end' }}>
-
-
                     <input
                         className="form-control me-2"
                         type="file"
@@ -82,8 +90,14 @@ const CodeEditor = () => {
                         <option value="javascript">JavaScript</option>
                         <option value="java">Java</option>
                     </select>
-                    <button className="btn btn-me-2" type="button" onClick={runCode} style={{ backgroundColor: '#1e1e1e', color: 'white' }}>
-                        Run
+                    <button
+                        className="btn btn-me-2"
+                        type="button"
+                        onClick={runCode}
+                        style={{ backgroundColor: '#1e1e1e', color: 'white' }}
+                        disabled={isRunning} // Disable the button while running
+                    >
+                        {isRunning ? 'Running...' : 'Run'} {/* Change button text */}
                     </button>
                 </div>
 
@@ -96,8 +110,6 @@ const CodeEditor = () => {
                     theme="vs-dark"
                 />
             </div>
-
-
 
             <div style={{
                 width: '35%',
@@ -113,8 +125,6 @@ const CodeEditor = () => {
                 <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{output || 'No output yet'}</pre>
             </div>
         </div>
-
-
     );
 };
 
