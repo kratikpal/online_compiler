@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Editor as MonacoEditor } from '@monaco-editor/react';
 
 const CodeEditor = () => {
-    const [code, setCode] = useState('// Write your C++ code here...');
+    const [code, setCode] = useState('// Write your C++ code here... \n#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}');
     const [output, setOutput] = useState('');
     const [language, setLanguage] = useState('cpp');
     const [isRunning, setIsRunning] = useState(false); // New state for running status
@@ -52,7 +52,28 @@ const CodeEditor = () => {
         setLanguage(selectedLanguage);
 
         const commentSymbol = selectedLanguage === 'python' ? '#' : '//';
-        setCode(`${commentSymbol} Write your ${selectedLanguage} code here...`);
+        let instruction = `${commentSymbol} Write your ${selectedLanguage} code here...`;
+        switch (selectedLanguage) {
+            case 'python':
+                instruction = instruction + '\nprint("Hello, World!")';
+                break;
+
+            case 'java':
+                instruction = `// The class name must be "user_code"\n${instruction}\npublic class user_code {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}`;
+                break;
+
+            case 'javascript':
+                instruction = instruction + '\nconsole.log("Hello, World!")';
+                break;
+
+            case 'cpp':
+                instruction = instruction + '\n#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}';
+                break;
+
+            default:
+                break;
+        }
+        setCode(instruction);
     };
 
     return (
