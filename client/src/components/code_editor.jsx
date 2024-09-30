@@ -5,7 +5,8 @@ const CodeEditor = () => {
     const [code, setCode] = useState('// Write your C++ code here... \n#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}');
     const [output, setOutput] = useState('');
     const [language, setLanguage] = useState('cpp');
-    const [isRunning, setIsRunning] = useState(false); // New state for running status
+    const [isRunning, setIsRunning] = useState(false);
+    const [inputValue, setInputValue] = useState(''); // New state for input value
 
     const handleEditorChange = (value) => {
         setCode(value);
@@ -21,14 +22,14 @@ const CodeEditor = () => {
     };
 
     const runCode = async () => {
-        setIsRunning(true); // Set running state to true
+        setIsRunning(true);
         try {
             const response = await fetch(`http://localhost:3000/run-code/${language}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ code }),
+                body: JSON.stringify({ code, input: inputValue }), // Include input value in the request
             });
 
             if (response.status === 200) {
@@ -43,7 +44,7 @@ const CodeEditor = () => {
         } catch (error) {
             setOutput(`Error: ${error.message}`);
         } finally {
-            setIsRunning(false); // Reset running state
+            setIsRunning(false);
         }
     };
 
@@ -55,25 +56,22 @@ const CodeEditor = () => {
         let instruction = `${commentSymbol} Write your ${selectedLanguage} code here...`;
         switch (selectedLanguage) {
             case 'python':
-                instruction = instruction + '\nprint("Hello, World!")';
+                instruction += '\nprint("Hello, World!")';
                 break;
-
             case 'java':
                 instruction = `// The class name must be "user_code"\n${instruction}\npublic class user_code {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}`;
                 break;
-
             case 'javascript':
-                instruction = instruction + '\nconsole.log("Hello, World!")';
+                instruction += '\nconsole.log("Hello, World!")';
                 break;
-
             case 'cpp':
-                instruction = instruction + '\n#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}';
+                instruction += '\n#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}';
                 break;
-
             default:
                 break;
         }
         setCode(instruction);
+        setInputValue(''); // Reset input value when changing language
     };
 
     return (
@@ -116,9 +114,9 @@ const CodeEditor = () => {
                         type="button"
                         onClick={runCode}
                         style={{ backgroundColor: '#1e1e1e', color: 'white' }}
-                        disabled={isRunning} // Disable the button while running
+                        disabled={isRunning}
                     >
-                        {isRunning ? 'Running...' : 'Run'} {/* Change button text */}
+                        {isRunning ? 'Running...' : 'Run'}
                     </button>
                 </div>
 
@@ -144,6 +142,14 @@ const CodeEditor = () => {
             }}>
                 <h5 style={{ color: '#66ff99' }}>Output</h5>
                 <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{output || 'No output yet'}</pre>
+
+                <input
+                    type="text"
+                    className="form-control mt-3"
+                    placeholder="Input for the code..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)} // Update input state on change
+                />
             </div>
         </div>
     );
