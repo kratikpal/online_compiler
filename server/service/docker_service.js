@@ -99,6 +99,10 @@ async function runJavaCode(req, res) {
       try {
         fs.unlinkSync(userInputFilePath);
         fs.unlinkSync(userCodeFilePath);
+        const user_code_class = path.join(__dirname, "user_code.class");
+        if (fs.existsSync(user_code_class)) {
+          fs.unlinkSync(user_code_class);
+        }
       } catch (unlinkError) {
         console.error(`Could not delete file: ${unlinkError.message}`);
       }
