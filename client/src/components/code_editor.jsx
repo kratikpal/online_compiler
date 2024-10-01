@@ -1,12 +1,26 @@
 import React, { useState } from 'react';
 import { Editor as MonacoEditor } from '@monaco-editor/react';
 
+const LANGUAGES = [
+    { value: 'cpp', label: 'C++' },
+    { value: 'python', label: 'Python' },
+    { value: 'javascript', label: 'JavaScript' },
+    { value: 'java', label: 'Java' },
+];
+
+const DEFAULT_CODE = {
+    cpp: '// Write your C++ code here...\n#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}',
+    python: '# Write your Python code here...\nprint("Hello, World!")',
+    javascript: '// Write your JavaScript code here...\nconsole.log("Hello, World!")',
+    java: '// The class name must be "user_code"\n// Write your Java code here...\npublic class user_code {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}',
+};
+
 const CodeEditor = () => {
-    const [code, setCode] = useState('// Write your C++ code here... \n#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}');
+    const [code, setCode] = useState(DEFAULT_CODE.cpp);
     const [output, setOutput] = useState('');
     const [language, setLanguage] = useState('cpp');
     const [isRunning, setIsRunning] = useState(false);
-    const [inputValue, setInputValue] = useState(''); // New state for input value
+    const [inputValue, setInputValue] = useState('');
 
     const handleEditorChange = (value) => {
         setCode(value);
@@ -51,28 +65,10 @@ const CodeEditor = () => {
     const handleLanguageChange = (event) => {
         const selectedLanguage = event.target.value;
         setLanguage(selectedLanguage);
-
-        const commentSymbol = selectedLanguage === 'python' ? '#' : '//';
-        let instruction = `${commentSymbol} Write your ${selectedLanguage} code here...`;
-        switch (selectedLanguage) {
-            case 'python':
-                instruction += '\nprint("Hello, World!")';
-                break;
-            case 'java':
-                instruction = `// The class name must be "user_code"\n${instruction}\npublic class user_code {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}`;
-                break;
-            case 'javascript':
-                instruction += '\nconsole.log("Hello, World!")';
-                break;
-            case 'cpp':
-                instruction += '\n#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}';
-                break;
-            default:
-                break;
-        }
-        setCode(instruction);
-        setInputValue(''); // Reset input value when changing language
+        setCode(DEFAULT_CODE[selectedLanguage]);
+        setInputValue('');
     };
+
 
     return (
         <div className="container-fluid" style={{ height: '100vh', display: 'flex', flexDirection: 'row' }}>
@@ -119,6 +115,10 @@ const CodeEditor = () => {
                         {isRunning ? 'Running...' : 'Run'}
                     </button>
                 </div>
+
+                {/* <div style={{ display: isRunning ? 'block' : 'none' }}>
+                    <p style={{ color: '#ffffff' }}>We are in devloping stage so your code will take some time to execute please be patient</p>
+                </div> */}
 
                 <MonacoEditor
                     height="600px"
