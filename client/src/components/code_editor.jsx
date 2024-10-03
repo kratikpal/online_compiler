@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Editor as MonacoEditor } from '@monaco-editor/react';
-
 const LANGUAGES = [
     { value: 'cpp', label: 'C++' },
     { value: 'python', label: 'Python' },
@@ -21,7 +20,6 @@ const CodeEditor = () => {
     const [language, setLanguage] = useState('cpp');
     const [isRunning, setIsRunning] = useState(false);
     const [inputValue, setInputValue] = useState('');
-
     const handleEditorChange = (value) => {
         setCode(value);
     };
@@ -36,7 +34,12 @@ const CodeEditor = () => {
     };
 
     const runCode = async () => {
+        // alert("compile");
+        setTimeout(() => {
+            alert("We are in devloping stage so your code will take some time to execute please be patient");
+        }, 1000);
         setIsRunning(true);
+
         try {
             const response = await fetch(`http://localhost:3000/run-code/${language}`, {
                 method: 'POST',
@@ -116,9 +119,7 @@ const CodeEditor = () => {
                     </button>
                 </div>
 
-                {/* <div style={{ display: isRunning ? 'block' : 'none' }}>
-                    <p style={{ color: '#ffffff' }}>We are in devloping stage so your code will take some time to execute please be patient</p>
-                </div> */}
+
 
                 <MonacoEditor
                     height="600px"
@@ -129,7 +130,7 @@ const CodeEditor = () => {
                     theme="vs-dark"
                 />
             </div>
-
+            {/* <div style={{ display: 'block', marginTop: '45px' }}> */}
             <div style={{
                 width: '35%',
                 backgroundColor: '#1e1e1e',
@@ -138,10 +139,9 @@ const CodeEditor = () => {
                 height: '600px',
                 marginTop: '45px',
                 borderLeft: '1px solid #555',
-                overflowY: 'auto'
+                overflowY: 'auto',
+                display: 'inline-block'
             }}>
-                <h5 style={{ color: '#66ff99' }}>Output</h5>
-                <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{output || 'No output yet'}</pre>
 
                 <input
                     type="text"
@@ -150,8 +150,15 @@ const CodeEditor = () => {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)} // Update input state on change
                 />
+                <hr style={{ marginTop: '200px' }} />
+                <div style={{ marginTop: '20px' }}>
+                    <h5 style={{ color: '#66ff99' }}>Output</h5>
+                    <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{output || 'No output yet'}</pre>
+                </div>
             </div>
         </div>
+
+
     );
 };
 
