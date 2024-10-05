@@ -120,15 +120,16 @@ const CodeEditor = () => {
                 </div>
 
 
-
-                <MonacoEditor
-                    height="600px"
-                    width="100%"
-                    language={language}
-                    value={code}
-                    onChange={handleEditorChange}
-                    theme="vs-dark"
-                />
+                <div style={{ flex: 1, borderRadius: '10px', overflow: 'hidden' }}>
+                    <MonacoEditor
+                        height="600px"
+                        width="100%"
+                        language={language}
+                        value={code}
+                        onChange={handleEditorChange}
+                        theme="vs-dark"
+                    />
+                </div>
             </div>
             {/* <div style={{ display: 'block', marginTop: '45px' }}> */}
             <div style={{
@@ -140,7 +141,8 @@ const CodeEditor = () => {
                 marginTop: '45px',
                 borderLeft: '1px solid #555',
                 overflowY: 'auto',
-                display: 'inline-block'
+                display: 'inline-block',
+                borderRadius: '10px',
             }}>
 
                 <input
