@@ -1,6 +1,7 @@
-const http = require("http");
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const runCodeOfflineRoute = require("./routes/run_code_route_offline");
 const runCodeRoute = require("./routes/run_code_route");
 
 const PORT = process.env.PORT || 3000;
@@ -10,6 +11,7 @@ app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.options("*", cors());
+app.use("/run-code-offline", runCodeOfflineRoute);
 app.use("/run-code", runCodeRoute);
 
 // Set up a simple route
