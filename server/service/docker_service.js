@@ -19,11 +19,19 @@ async function runCppCode(req, res) {
   const userInputFilePath = path.join(__dirname, "input.txt");
   fs.writeFileSync(userInputFilePath, input ?? "");
 
+  // Save output and error files
+  const outputFilePath = path.join(__dirname, "output.txt");
+  fs.writeFileSync(outputFilePath, "");
+
+  const errorFilePath = path.join(__dirname, "error.txt");
+  fs.writeFileSync(errorFilePath, "");
+
   // S3 Bucket name and paths
   const bucketName = "kratikpalonlinecompiler";
   const userCodeKey = "user/user_code.cpp";
   const userInputKey = "user/input.txt";
   const outputKey = "user/output.txt";
+  const errorKey = "user/error.txt";
 
   // Upload the user's code and input to S3
   try {
@@ -42,6 +50,22 @@ async function runCppCode(req, res) {
         Body: fs.createReadStream(userInputFilePath),
       })
       .promise(console.log("Uploaded user input to S3"));
+
+    await s3
+      .putObject({
+        Bucket: bucketName,
+        Key: outputKey,
+        Body: fs.createReadStream(outputFilePath),
+      })
+      .promise(console.log("Uploaded output to S3"));
+
+    await s3
+      .putObject({
+        Bucket: bucketName,
+        Key: errorKey,
+        Body: fs.createReadStream(errorFilePath),
+      })
+      .promise(console.log("Uploaded error to S3"));
   } catch (err) {
     console.log(err);
   }
@@ -50,6 +74,8 @@ async function runCppCode(req, res) {
   try {
     fs.unlinkSync(userCodeFilePath);
     fs.unlinkSync(userInputFilePath);
+    fs.unlinkSync(outputFilePath);
+    fs.unlinkSync(errorFilePath);
   } catch (err) {
     console.log(err);
   }
@@ -109,14 +135,6 @@ async function runCppCode(req, res) {
       }
     }
 
-    // Optionally, you can get the exit code and logs from the task
-    const finalStatus = await ecs
-      .describeTasks({
-        cluster: clusterName,
-        tasks: [taskArn],
-      })
-      .promise();
-
     // Read the output file from S3
     const outputData = await s3
       .getObject({
@@ -128,6 +146,21 @@ async function runCppCode(req, res) {
     // Convert the output data to a string
     const output = outputData.Body.toString();
 
+    // Read the error file from S3
+    const errorData = await s3
+      .getObject({
+        Bucket: bucketName,
+        Key: errorKey,
+      })
+      .promise();
+
+    // Convert the error data to a string
+    const error = errorData.Body.toString();
+
+    if (error) {
+      return res.status(400).json({ error: error });
+    }
+
     // Send response to client
     res.json({
       output: output,
@@ -137,6 +170,47 @@ async function runCppCode(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
+
+// // Run cpp code locally
+// async function runCppCode(req, res) {
+//   const { code, input } = req.body; // Get the C++ code from the request
+//   console.log(`code: ${code}`);
+
+//   // Save the user's code to a file
+//   const userCodeFilePath = path.join(__dirname, "user_code.cpp");
+//   fs.writeFileSync(userCodeFilePath, code);
+
+//   // Save the user's input to a file
+//   const userInputFilePath = path.join(__dirname, "input.txt");
+//   fs.writeFileSync(userInputFilePath, input ?? "");
+
+//   // Resolve the path for Docker volume mount
+//   const resolvedPath = path.resolve(__dirname);
+
+//   // Run the Docker container
+//   exec(
+//     `docker run --rm -v "${resolvedPath}:/usr/src/app" cpp-compiler`,
+//     (error, stdout, stderr) => {
+//       // Delete the user's code file after execution
+//       try {
+//         const outputBinaryPath = path.join(__dirname, "output");
+//         if (fs.existsSync(outputBinaryPath)) {
+//           fs.unlinkSync(outputBinaryPath);
+//         }
+//         fs.unlinkSync(userInputFilePath);
+//         fs.unlinkSync(userCodeFilePath);
+//       } catch (unlinkError) {
+//         console.error(`Could not delete file: ${unlinkError.message}`);
+//       }
+
+//       if (error) {
+//         console.error(`Error: ${error.message}`);
+//         return res.status(400).json({ error: stderr });
+//       }
+//       res.json({ output: stdout }); // Send the output back to the user
+//     }
+//   );
+// }
 
 async function runPythonCode(req, res) {
   const { code, input } = req.body; // Get the Python code from the request
