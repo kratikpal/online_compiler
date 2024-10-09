@@ -7,15 +7,15 @@ const ecs = new AWS.ECS({
 
 const s3 = new AWS.S3();
 
-async function runCppCode(req, res) {
+async function runPythonCode(req, res) {
   const { code, input } = req.body;
 
-  if(!code) {
+  if (!code) {
     return res.status(400).json({ error: "No code provided" });
   }
 
   // Save the user's code to a file
-  const userCodeFilePath = path.join(__dirname, "user_code.cpp");
+  const userCodeFilePath = path.join(__dirname, "user_code.py");
   fs.writeFileSync(userCodeFilePath, code);
 
   // Save the user's input to a file
@@ -25,13 +25,12 @@ async function runCppCode(req, res) {
   // Save output and error files
   const outputFilePath = path.join(__dirname, "output.txt");
   fs.writeFileSync(outputFilePath, "");
-
   const errorFilePath = path.join(__dirname, "error.txt");
   fs.writeFileSync(errorFilePath, "");
 
   // S3 Bucket name and paths
   const bucketName = "kratikpalonlinecompiler";
-  const userCodeKey = "user/user_code.cpp";
+  const userCodeKey = "user/user_code.py";
   const userInputKey = "user/input.txt";
   const outputKey = "user/output.txt";
   const errorKey = "user/error.txt";
@@ -39,61 +38,58 @@ async function runCppCode(req, res) {
   // Upload the user's code and input to S3
   try {
     await s3
-      .putObject({
+      .upload({
         Bucket: bucketName,
         Key: userCodeKey,
         Body: fs.createReadStream(userCodeFilePath),
       })
-      .promise(console.log("Uploaded user code to S3"));
-
+      .promise();
     await s3
-      .putObject({
+      .upload({
         Bucket: bucketName,
         Key: userInputKey,
         Body: fs.createReadStream(userInputFilePath),
       })
-      .promise(console.log("Uploaded user input to S3"));
-
+      .promise();
     await s3
-      .putObject({
+      .upload({
         Bucket: bucketName,
         Key: outputKey,
         Body: fs.createReadStream(outputFilePath),
       })
-      .promise(console.log("Uploaded output to S3"));
-
+      .promise();
     await s3
-      .putObject({
+      .upload({
         Bucket: bucketName,
         Key: errorKey,
         Body: fs.createReadStream(errorFilePath),
       })
-      .promise(console.log("Uploaded error to S3"));
-  } catch (err) {
-    console.log(err);
+      .promise();
+  } catch (error) {
+    console.error(error);
   }
 
-  // Delete the user's code and input files after uploading
+  //   Delete the user's code and input files after uploading to S3
   try {
     fs.unlinkSync(userCodeFilePath);
     fs.unlinkSync(userInputFilePath);
     fs.unlinkSync(outputFilePath);
     fs.unlinkSync(errorFilePath);
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.error(error);
   }
 
-  const taskDefinition = "cpp_compiler"; // Make sure this matches your ECS task definition name
-  const clusterName = "compiler"; // Ensure this matches your ECS cluster name
+  const taskDefinition = "python_compiler";
+  const clusterName = "compiler_python";
 
   const params = {
     taskDefinition,
     cluster: clusterName,
-    launchType: "FARGATE", // or 'EC2'
+    launchType: "FARGATE",
     overrides: {
       containerOverrides: [
         {
-          name: "cpp", // Ensure this matches the container name in your task definition
+          name: "python_compiler", // Ensure this matches the container name in your task definition
           command: [
             "./run.sh", // Run the script that fetches, compiles, and executes the C++ code
           ],
@@ -106,11 +102,10 @@ async function runCppCode(req, res) {
         assignPublicIp: "ENABLED", // Enable public IP if needed
       },
     },
-    count: 1, // Number of tasks to run
+    count: 1,
   };
 
   try {
-    // Start the task
     const result = await ecs.runTask(params).promise();
 
     const taskArn = result.tasks[0].taskArn;
@@ -174,4 +169,6 @@ async function runCppCode(req, res) {
   }
 }
 
-module.exports = { runCppCode };
+module.exports = {
+  runPythonCode,
+};
